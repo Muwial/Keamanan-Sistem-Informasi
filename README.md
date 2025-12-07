@@ -64,6 +64,38 @@ CREATE TABLE IF NOT EXISTS letters (
 - Pembatasan jenis file: hanya PDF, maksimal 5MB.
 - Helmet & CORS untuk header keamanan dasar.
 
+## Push ke GitHub (Automated)
+
+### Opsi 1: Script Batch (Windows) - Paling Mudah
+Double-click file berikut untuk push otomatis:
+- **`push-to-github.bat`** - Push dengan input pesan commit (interaktif)
+- **`quick-push.bat`** - Push cepat dengan pesan default (tanpa input)
+
+### Opsi 2: NPM Script
+```bash
+# Push dengan pesan custom
+npm run push "Pesan commit Anda"
+
+# Push cepat dengan pesan default
+npm run quick-push
+```
+
+### Opsi 3: PowerShell Script
+```powershell
+.\push-to-github.ps1
+```
+
+### Opsi 4: GitHub Actions (Web Interface)
+1. Buka repository di GitHub
+2. Klik tab **Actions**
+3. Pilih workflow **"Auto Push on Manual Trigger"**
+4. Klik **"Run workflow"**
+5. Masukkan pesan commit (opsional)
+6. Klik **"Run workflow"**
+
+**Catatan:** Pastikan sudah login ke GitHub (untuk script lokal) atau sudah setup GitHub CLI.
+
+
 
 
 
