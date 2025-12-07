@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Admin - Digital Signature</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <div class="hero">
+          <div class="hero-icon">DS</div>
+          <div class="hero-content">
+            <span class="subtitle">🔒 Keamanan Sistem Informasi - Kelompok 2</span>
+            <h1>Dashboard Admin</h1>
+            <p class="muted">Pantau seluruh surat dan QR Code verifikasi</p>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn-ghost" href="/">Input Surat</a>
+        <button id="exportBtn" class="btn-primary">Export ke Excel</button>
+        <button onclick="loadData()" class="btn-ghost" title="Refresh data">🔄 Refresh</button>
+        <span id="dataCount" class="muted" style="margin-left:12px; font-size:14px;"></span>
+      </div>
+    </header>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+        <div>
+          <h2 style="margin:0;">Data Surat</h2>
+          <p class="muted" style="margin:4px 0 0 0;">Klik QR untuk download atau verifikasi</p>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="table-responsive">
+        <table id="lettersTable">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Nomor Surat</th>
+              <th>Perihal</th>
+              <th>Penandatangan</th>
+              <th>Tanggal</th>
+              <th>QR & Hash</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <script src="/js/admin.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Database
+data/*.db
+data/*.db-journal
+
+# Uploaded files
+uploads/*
+!uploads/.gitkeep
+
+# Signature files
+signatures/*
+!signatures/.gitkeep
+
+# QR Code files
+qrcodes/*
+!qrcodes/.gitkeep
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+

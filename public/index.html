@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Signature - Input Surat</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <div class="hero">
+          <div class="hero-icon">DS</div>
+          <div class="hero-content">
+            <span class="subtitle">🔒 Keamanan Sistem Informasi - Kelompok 2</span>
+            <h1>Digital Signature Verification</h1>
+            <p class="muted">Input surat, generate QR, dan verifikasi instan</p>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn-ghost" href="/admin">Dashboard Admin</a>
+      </div>
+    </header>
+
+    <div class="card">
+      <h2>Input Data Surat</h2>
+      <p class="muted">Lengkapi data berikut untuk membuat QR Code verifikasi.</p>
+      <div class="divider"></div>
+      <form id="letterForm" enctype="multipart/form-data">
+        <div class="grid">
+          <div>
+            <label for="nomor_surat">Nomor Surat</label>
+            <input type="text" id="nomor_surat" name="nomor_surat" placeholder="Contoh: 123/DS/2025" required>
+          </div>
+          <div>
+            <label for="perihal">Perihal</label>
+            <input type="text" id="perihal" name="perihal" placeholder="Perihal surat" required>
+          </div>
+          <div>
+            <label for="penandatangan">Nama Penandatangan</label>
+            <input type="text" id="penandatangan" name="penandatangan" placeholder="Nama penandatangan" required>
+          </div>
+          <div>
+            <label for="tanggal_surat">Tanggal Surat</label>
+            <input type="date" id="tanggal_surat" name="tanggal_surat" required>
+          </div>
+          <div>
+            <label for="file">Upload File Surat (PDF, opsional)</label>
+            <input type="file" id="file" name="file" accept="application/pdf">
+          </div>
+          <div>
+            <label for="tanda_tangan">Upload Gambar Tanda Tangan (JPG/PNG, opsional)</label>
+            <input type="file" id="tanda_tangan" name="tanda_tangan" accept="image/jpeg,image/jpg,image/png">
+            <div class="file-upload-wrapper">
+              <div class="file-upload-preview" id="signaturePreview">
+                <p class="muted" style="font-size:12px; margin-bottom:8px;">Preview:</p>
+                <img id="signaturePreviewImg" src="" alt="Preview Tanda Tangan" style="display:none;">
+              </div>
+            </div>
+            <p class="muted" style="font-size:12px; margin-top:8px;">Format: JPG atau PNG, maksimal 2MB</p>
+          </div>
+        </div>
+        <div style="margin-top:18px; display:flex; gap:12px; align-items:center;">
+          <button type="submit" class="btn-primary">Simpan &amp; Generate QR</button>
+          <span id="statusText" class="muted"></span>
+        </div>
+      </form>
+      <div id="result" style="display:none;">
+        <div class="info-item" style="text-align:center;">
+          <div class="status success" style="margin-bottom:16px;">✓ QR Code berhasil dibuat</div>
+          <p class="muted" style="margin-bottom:16px;">Scan QR berikut untuk verifikasi:</p>
+          <img id="qrPreview" class="qr-thumb" alt="QR Preview" style="margin:0 auto;">
+          <div style="margin-top:20px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+            <a id="downloadQrBtn" class="btn-primary" style="text-decoration:none; cursor:pointer;">📥 Download QR Code</a>
+            <a id="verificationLink" class="btn-ghost" target="_blank" rel="noopener" style="text-decoration:none;">🔗 Buka Halaman Verifikasi</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/js/main.js"></script>
+</body>
+</html>
+
