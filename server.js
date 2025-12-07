@@ -25,10 +25,17 @@ const uploadsDir = path.join(__dirname, 'uploads');
 const qrDir = path.join(__dirname, 'qrcodes');
 const signaturesDir = path.join(__dirname, 'signatures');
 
-// Ensure signatures directory exists
-if (!fs.existsSync(signaturesDir)) {
-  fs.mkdirSync(signaturesDir, { recursive: true });
-}
+// Ensure all required directories exist
+const ensureDirectoryExists = (dirPath) => {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+    console.log(`Directory created: ${dirPath}`);
+  }
+};
+
+ensureDirectoryExists(uploadsDir);
+ensureDirectoryExists(qrDir);
+ensureDirectoryExists(signaturesDir);
 
 // Storage for PDF files
 const pdfStorage = multer.diskStorage({
@@ -93,11 +100,13 @@ const generateDataHash = (data) => {
 const generateSignatureHash = async (signaturePath) => {
   if (!signaturePath) return null;
   try {
-    const signatureDir = path.join(__dirname, 'signatures');
-    const filePath = path.join(signatureDir, signaturePath);
+    // Use the signaturesDir constant instead of recreating path
+    const filePath = path.join(signaturesDir, signaturePath);
     if (fs.existsSync(filePath)) {
       const fileBuffer = fs.readFileSync(filePath);
       return crypto.createHash('sha256').update(fileBuffer).digest('hex');
+    } else {
+      console.warn(`Signature file not found: ${filePath}`);
     }
   } catch (err) {
     console.error('Error generating signature hash:', err);
@@ -154,9 +163,20 @@ app.get('/verify', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'v
 
 const ensureQrExists = async (id, verificationUrl) => {
   // Always re-generate to ensure URL (IP/port) is up to date for mobile scans.
-  const filePath = path.join(qrDir, `qr-${id}.png`);
-  await QRCode.toFile(filePath, verificationUrl, { width: 400, margin: 2 });
-  return filePath;
+  try {
+    // Ensure qrcodes directory exists before generating QR
+    ensureDirectoryExists(qrDir);
+    const filePath = path.join(qrDir, `qr-${id}.png`);
+    await QRCode.toFile(filePath, verificationUrl, { width: 400, margin: 2 });
+    return filePath;
+  } catch (err) {
+    console.error(`Error generating QR code for id ${id}:`, err);
+    // Ensure directory exists and retry once
+    ensureDirectoryExists(qrDir);
+    const filePath = path.join(qrDir, `qr-${id}.png`);
+    await QRCode.toFile(filePath, verificationUrl, { width: 400, margin: 2 });
+    return filePath;
+  }
 };
 
 // Combined upload handler for both PDF and signature
@@ -284,7 +304,11 @@ app.post(
       } else if (err.message.includes('SQLITE')) {
         errorMessage = 'Kesalahan database. Pastikan database dapat diakses.';
       } else if (err.message.includes('ENOENT') || err.message.includes('no such file')) {
-        errorMessage = 'Kesalahan akses file. Pastikan folder uploads dan signatures ada.';
+        errorMessage = 'Kesalahan akses file. Folder uploads, qrcodes, atau signatures tidak ditemukan. Pastikan folder-folder tersebut ada dan dapat diakses.';
+        // Try to create missing directories
+        ensureDirectoryExists(uploadsDir);
+        ensureDirectoryExists(qrDir);
+        ensureDirectoryExists(signaturesDir);
       }
       
       return res.status(500).json({ 
@@ -409,14 +433,27 @@ app.get('/download/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const row = await db.get('SELECT file_path FROM letters WHERE id = ?', [id]);
-    if (!row || !row.file_path) return res.status(404).send('File tidak ditemukan');
+    if (!row || !row.file_path) {
+      return res.status(404).send('File tidak ditemukan');
+    }
+    
+    // Ensure uploads directory exists
+    ensureDirectoryExists(uploadsDir);
+    
     const fileLocation = path.join(uploadsDir, row.file_path);
-    if (!fs.existsSync(fileLocation)) return res.status(404).send('File tidak ditemukan');
+    if (!fs.existsSync(fileLocation)) {
+      console.warn(`File not found: ${fileLocation}`);
+      return res.status(404).send('File tidak ditemukan di server');
+    }
+    
     res.download(fileLocation, row.file_path);
   } catch (err) {
     console.error('Error downloading file:', err);
     if (!res.headersSent) {
-      res.status(500).json({ message: 'Gagal mengunduh file' });
+      res.status(500).json({ 
+        message: 'Gagal mengunduh file',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+      });
     }
   }
 });
@@ -519,17 +556,35 @@ app.delete(
 
       // Hapus file surat jika ada
       if (row.file_path) {
-        const fileLocation = path.join(uploadsDir, row.file_path);
-        if (fs.existsSync(fileLocation)) fs.unlinkSync(fileLocation);
+        try {
+          const fileLocation = path.join(uploadsDir, row.file_path);
+          if (fs.existsSync(fileLocation)) {
+            fs.unlinkSync(fileLocation);
+          }
+        } catch (err) {
+          console.warn(`Failed to delete file: ${row.file_path}`, err.message);
+        }
       }
       // Hapus file tanda tangan jika ada
       if (row.tanda_tangan_path) {
-        const signatureLocation = path.join(signaturesDir, row.tanda_tangan_path);
-        if (fs.existsSync(signatureLocation)) fs.unlinkSync(signatureLocation);
+        try {
+          const signatureLocation = path.join(signaturesDir, row.tanda_tangan_path);
+          if (fs.existsSync(signatureLocation)) {
+            fs.unlinkSync(signatureLocation);
+          }
+        } catch (err) {
+          console.warn(`Failed to delete signature: ${row.tanda_tangan_path}`, err.message);
+        }
       }
       // Hapus QR code terkait
-      const qrPath = path.join(qrDir, `qr-${row.id}.png`);
-      if (fs.existsSync(qrPath)) fs.unlinkSync(qrPath);
+      try {
+        const qrPath = path.join(qrDir, `qr-${row.id}.png`);
+        if (fs.existsSync(qrPath)) {
+          fs.unlinkSync(qrPath);
+        }
+      } catch (err) {
+        console.warn(`Failed to delete QR code for id ${row.id}`, err.message);
+      }
 
       await db.run('DELETE FROM letters WHERE id = ?', [id]);
       return res.json({ message: 'Data berhasil dihapus' });
@@ -556,5 +611,9 @@ app.use((err, _req, res, _next) => {
 
 app.listen(PORT, () => {
   console.log(`Server berjalan di http://localhost:${PORT}`);
+  console.log(`Uploads directory: ${uploadsDir}`);
+  console.log(`QR Codes directory: ${qrDir}`);
+  console.log(`Signatures directory: ${signaturesDir}`);
+  console.log(`All required directories are ready.`);
 });
 

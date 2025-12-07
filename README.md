@@ -2,9 +2,42 @@
 
 Aplikasi web untuk input surat, generate QR Code, dan verifikasi digital yang bisa diakses dari perangkat di jaringan Wi-Fi yang sama.
 
+## 📚 Dokumentasi
+
+- **[TUTORIAL_SETUP.md](./TUTORIAL_SETUP.md)** - Tutorial lengkap setup dari clone hingga running
+- **[REQUIREMENTS.md](./REQUIREMENTS.md)** - Daftar lengkap requirements sistem
+- **[HOW_TO_RUN.md](./HOW_TO_RUN.md)** - Quick start guide
+- **[CARA_MENGGUNAKAN.md](./CARA_MENGGUNAKAN.md)** - User manual aplikasi
+- **[LAPORAN_AKHIR.md](./LAPORAN_AKHIR.md)** - Laporan akhir project
+
+## 🚀 Quick Start
+
+### Prasyarat
+- Node.js 14+ dan npm terinstall
+- Git terinstall
+
+### Setup
+```bash
+# 1. Clone repository
+git clone https://github.com/Muwial/Keamanan-Sistem-Informasi.git
+cd Keamanan-Sistem-Informasi
+
+# 2. Install dependencies
+npm install
+
+# 3. Jalankan server
+npm start
+```
+
+Aplikasi akan berjalan di `http://localhost:3000`
+
+**📖 Untuk tutorial lengkap, lihat [TUTORIAL_SETUP.md](./TUTORIAL_SETUP.md)**
+
 ## Fitur
 - Input surat dengan validasi & upload PDF (opsional).
+- Upload gambar tanda tangan (JPG/PNG).
 - QR Code berisi tautan verifikasi dengan nonce unik.
+- Hash SHA-256 untuk data integrity dan signature verification.
 - Halaman verifikasi (VERIFIED) yang ramah mobile.
 - Dashboard admin: tabel data, preview & download QR, download surat, export Excel (QR sebagai gambar).
 - Larangan duplikasi nomor surat (UNIQUE).
@@ -14,20 +47,9 @@ Aplikasi web untuk input surat, generate QR Code, dan verifikasi digital yang bi
 - `db.js` / `schema.sql` – inisialisasi database SQLite.
 - `public/` – halaman `index.html`, `admin.html`, `verify.html`, CSS, JS.
 - `uploads/` – file PDF tersimpan.
+- `signatures/` – gambar tanda tangan tersimpan.
 - `qrcodes/` – file PNG QR Code.
 - `data/signatures.db` – file SQLite.
-
-## Menjalankan
-1) Pastikan Node.js terpasang.  
-2) Install dependency:
-   ```bash
-   npm install
-   ```
-3) Jalankan server:
-   ```bash
-   npm start
-   ```
-   Server default di `http://localhost:3000`.
 
 ## Akses dari HP (satu Wi-Fi)
 - Lihat IP lokal: di Windows `ipconfig` (alamat IPv4). Misal `192.168.1.10`.
@@ -53,7 +75,10 @@ CREATE TABLE IF NOT EXISTS letters (
   penandatangan TEXT NOT NULL,
   tanggal_surat TEXT NOT NULL,
   file_path TEXT,
+  tanda_tangan_path TEXT,
   nonce TEXT NOT NULL,
+  data_hash TEXT NOT NULL,
+  signature_hash TEXT,
   created_at TEXT NOT NULL
 );
 ```
@@ -61,39 +86,18 @@ CREATE TABLE IF NOT EXISTS letters (
 ## Catatan Keamanan
 - Validasi & sanitasi input dengan `express-validator`.
 - Nonce unik per surat di tautan verifikasi (QR tidak dapat dipalsukan).
-- Pembatasan jenis file: hanya PDF, maksimal 5MB.
-- Helmet & CORS untuk header keamanan dasar.
+- Hash SHA-256 untuk data integrity verification.
+- Hash SHA-256 untuk signature image verification.
+- Pembatasan jenis file: PDF (maks 5MB), JPG/PNG untuk tanda tangan (maks 2MB).
+- CORS untuk cross-origin resource sharing.
 
-## Push ke GitHub (Automated)
-
-### Opsi 1: Script Batch (Windows) - Paling Mudah
-Double-click file berikut untuk push otomatis:
-- **`push-to-github.bat`** - Push dengan input pesan commit (interaktif)
-- **`quick-push.bat`** - Push cepat dengan pesan default (tanpa input)
-
-### Opsi 2: NPM Script
-```bash
-# Push dengan pesan custom
-npm run push "Pesan commit Anda"
-
-# Push cepat dengan pesan default
-npm run quick-push
-```
-
-### Opsi 3: PowerShell Script
-```powershell
-.\push-to-github.ps1
-```
-
-### Opsi 4: GitHub Actions (Web Interface)
-1. Buka repository di GitHub
-2. Klik tab **Actions**
-3. Pilih workflow **"Auto Push on Manual Trigger"**
-4. Klik **"Run workflow"**
-5. Masukkan pesan commit (opsional)
-6. Klik **"Run workflow"**
-
-**Catatan:** Pastikan sudah login ke GitHub (untuk script lokal) atau sudah setup GitHub CLI.
+## Teknologi yang Digunakan
+- **Backend**: Node.js, Express.js
+- **Database**: SQLite3
+- **Security**: SHA-256 hashing, express-validator
+- **File Upload**: Multer
+- **QR Code**: qrcode library
+- **Export**: ExcelJS
 
 
 

@@ -104,17 +104,17 @@ function init() {
   }
 
   // Form submit handler
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
     
     if (!form || !statusText || !resultBox) {
       console.error('Required elements not found');
       return;
     }
     
-    statusText.textContent = 'Menyimpan...';
+  statusText.textContent = 'Menyimpan...';
     statusText.style.color = '';
-    resultBox.style.display = 'none';
+  resultBox.style.display = 'none';
 
     const submitBtn = form.querySelector('button[type="submit"]');
     if (!submitBtn) {
@@ -126,13 +126,13 @@ function init() {
     submitBtn.disabled = true;
     submitBtn.textContent = 'Menyimpan...';
 
-    const formData = new FormData(form);
+  const formData = new FormData(form);
 
-    try {
-      const res = await fetch('/api/letters', {
-        method: 'POST',
-        body: formData,
-      });
+  try {
+    const res = await fetch('/api/letters', {
+      method: 'POST',
+      body: formData,
+    });
 
       // Check if response is JSON
       let data;
@@ -144,7 +144,7 @@ function init() {
         throw new Error(`Server mengembalikan respons non-JSON: ${text.substring(0, 100)}`);
       }
       
-      if (!res.ok) {
+    if (!res.ok) {
         let message = data?.message || data?.errors?.[0]?.msg || 'Gagal menyimpan surat';
         
         // Enhanced error message for duplicate
@@ -180,7 +180,7 @@ function init() {
         }
         
         if (statusText) {
-          statusText.textContent = message;
+      statusText.textContent = message;
           statusText.style.color = '#ef4444';
           statusText.style.whiteSpace = 'pre-line';
           statusText.style.lineHeight = '1.6';
@@ -190,15 +190,15 @@ function init() {
           submitBtn.disabled = false;
           submitBtn.textContent = originalText;
         }
-        return;
-      }
+      return;
+    }
 
-      const qrUrl = `/qrcodes/qr-${data.id}.png`;
+    const qrUrl = `/qrcodes/qr-${data.id}.png`;
       currentQrId = data.id;
       if (qrPreview) qrPreview.src = qrUrl;
       if (verificationLink) {
-        verificationLink.href = data.verificationUrl;
-        verificationLink.textContent = data.verificationUrl;
+    verificationLink.href = data.verificationUrl;
+    verificationLink.textContent = data.verificationUrl;
       }
       
       // Update download filename with hash
@@ -246,7 +246,7 @@ function init() {
       
       // Scroll to result
       if (resultBox) resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    } catch (err) {
+  } catch (err) {
       console.error('Error submitting form:', err);
       
       // Remove any existing error div
@@ -277,8 +277,8 @@ function init() {
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
       }
-    }
-  });
+  }
+});
 
   return true;
 }
