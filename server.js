@@ -331,43 +331,87 @@ app.get('/api/letters', async (req, res) => {
       return res.json({ exists: !!existing, id: existing?.id || null });
     }
     
+    // Ensure all directories exist before processing
+    ensureDirectoryExists(uploadsDir);
+    ensureDirectoryExists(qrDir);
+    ensureDirectoryExists(signaturesDir);
+    
     const rows = await db.all('SELECT * FROM letters ORDER BY created_at DESC');
     const data = [];
     // ensure QR exists for each record and generate hash for old data
     /* eslint-disable no-await-in-loop */
     for (const row of rows) {
-      // Generate hash for old data that doesn't have hash
-      if (!row.data_hash) {
-        const dataHash = generateDataHash({
-          nomor_surat: row.nomor_surat,
-          perihal: row.perihal,
-          penandatangan: row.penandatangan,
-          tanggal_surat: row.tanggal_surat,
-        });
-        let signatureHash = row.signature_hash;
-        if (!signatureHash && row.tanda_tangan_path) {
-          signatureHash = await generateSignatureHash(row.tanda_tangan_path);
+      try {
+        // Generate hash for old data that doesn't have hash
+        if (!row.data_hash) {
+          const dataHash = generateDataHash({
+            nomor_surat: row.nomor_surat,
+            perihal: row.perihal,
+            penandatangan: row.penandatangan,
+            tanggal_surat: row.tanggal_surat,
+          });
+          let signatureHash = row.signature_hash;
+          if (!signatureHash && row.tanda_tangan_path) {
+            signatureHash = await generateSignatureHash(row.tanda_tangan_path);
+          }
+          // Update database with generated hash
+          await db.run(
+            'UPDATE letters SET data_hash = ?, signature_hash = ? WHERE id = ?',
+            [dataHash, signatureHash, row.id]
+          );
+          row.data_hash = dataHash;
+          row.signature_hash = signatureHash;
         }
-        // Update database with generated hash
-        await db.run(
-          'UPDATE letters SET data_hash = ?, signature_hash = ? WHERE id = ?',
-          [dataHash, signatureHash, row.id]
-        );
-        row.data_hash = dataHash;
-        row.signature_hash = signatureHash;
+        
+        const verificationUrl = `${getBaseUrl(req)}/verify?id=${row.id}&nonce=${row.nonce}`;
+        await ensureQrExists(row.id, verificationUrl);
+        
+        // Check if file actually exists before providing download URL
+        let downloadUrl = null;
+        if (row.file_path) {
+          const fileLocation = path.join(uploadsDir, row.file_path);
+          if (fs.existsSync(fileLocation)) {
+            downloadUrl = `/download/${row.id}`;
+          } else {
+            console.warn(`File not found for record ${row.id}: ${fileLocation}`);
+          }
+        }
+        
+        // Check if signature file actually exists
+        let tandaTanganUrl = null;
+        if (row.tanda_tangan_path) {
+          const signatureLocation = path.join(signaturesDir, row.tanda_tangan_path);
+          if (fs.existsSync(signatureLocation)) {
+            tandaTanganUrl = `/signatures/${row.tanda_tangan_path}`;
+          } else {
+            console.warn(`Signature file not found for record ${row.id}: ${signatureLocation}`);
+          }
+        }
+        
+        data.push({
+          ...row,
+          qr_image: `/qrcodes/qr-${row.id}.png`,
+          download_url: downloadUrl,
+          tanda_tangan_url: tandaTanganUrl,
+          verification_url: verificationUrl,
+          data_hash: row.data_hash || '',
+          signature_hash: row.signature_hash || null,
+        });
+      } catch (rowErr) {
+        // Log error but continue processing other rows
+        console.error(`Error processing row ${row.id}:`, rowErr);
+        // Still add the row but with limited data
+        data.push({
+          ...row,
+          qr_image: `/qrcodes/qr-${row.id}.png`,
+          download_url: null,
+          tanda_tangan_url: null,
+          verification_url: `${getBaseUrl(req)}/verify?id=${row.id}&nonce=${row.nonce}`,
+          data_hash: row.data_hash || '',
+          signature_hash: row.signature_hash || null,
+          error: 'Error processing this record',
+        });
       }
-      
-      const verificationUrl = `${getBaseUrl(req)}/verify?id=${row.id}&nonce=${row.nonce}`;
-      await ensureQrExists(row.id, verificationUrl);
-      data.push({
-        ...row,
-        qr_image: `/qrcodes/qr-${row.id}.png`,
-        download_url: row.file_path ? `/download/${row.id}` : null,
-        tanda_tangan_url: row.tanda_tangan_path ? `/signatures/${row.tanda_tangan_path}` : null,
-        verification_url: verificationUrl,
-        data_hash: row.data_hash || '',
-        signature_hash: row.signature_hash || null,
-      });
     }
     /* eslint-enable no-await-in-loop */
     res.json(data);
@@ -460,6 +504,11 @@ app.get('/download/:id', async (req, res) => {
 
 app.get('/api/export/excel', async (req, res) => {
   try {
+    // Ensure all directories exist before processing
+    ensureDirectoryExists(uploadsDir);
+    ensureDirectoryExists(qrDir);
+    ensureDirectoryExists(signaturesDir);
+    
     const rows = await db.all('SELECT * FROM letters ORDER BY created_at DESC');
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Data Surat');
@@ -478,50 +527,73 @@ app.get('/api/export/excel', async (req, res) => {
     for (let i = 0; i < rows.length; i += 1) {
       const row = rows[i];
       
-      // Generate hash for old data that doesn't have hash
-      let dataHash = row.data_hash;
-      let signatureHash = row.signature_hash;
-      
-      if (!dataHash) {
-        dataHash = generateDataHash({
+      try {
+        // Generate hash for old data that doesn't have hash
+        let dataHash = row.data_hash;
+        let signatureHash = row.signature_hash;
+        
+        if (!dataHash) {
+          dataHash = generateDataHash({
+            nomor_surat: row.nomor_surat,
+            perihal: row.perihal,
+            penandatangan: row.penandatangan,
+            tanggal_surat: row.tanggal_surat,
+          });
+          // Update database
+          await db.run('UPDATE letters SET data_hash = ? WHERE id = ?', [dataHash, row.id]);
+        }
+        
+        if (!signatureHash && row.tanda_tangan_path) {
+          signatureHash = await generateSignatureHash(row.tanda_tangan_path);
+          if (signatureHash) {
+            await db.run('UPDATE letters SET signature_hash = ? WHERE id = ?', [signatureHash, row.id]);
+          }
+        }
+        
+        const verificationUrl = `${getBaseUrl(req)}/verify?id=${row.id}&nonce=${row.nonce}`;
+        const qrPath = await ensureQrExists(row.id, verificationUrl);
+
+        sheet.addRow({
+          no: i + 1,
           nomor_surat: row.nomor_surat,
           perihal: row.perihal,
           penandatangan: row.penandatangan,
           tanggal_surat: row.tanggal_surat,
+          data_hash: dataHash || 'N/A',
+          signature_hash: signatureHash || 'N/A',
         });
-        // Update database
-        await db.run('UPDATE letters SET data_hash = ? WHERE id = ?', [dataHash, row.id]);
-      }
-      
-      if (!signatureHash && row.tanda_tangan_path) {
-        signatureHash = await generateSignatureHash(row.tanda_tangan_path);
-        if (signatureHash) {
-          await db.run('UPDATE letters SET signature_hash = ? WHERE id = ?', [signatureHash, row.id]);
+
+        // Only add QR image if file exists
+        if (fs.existsSync(qrPath)) {
+          try {
+            const imageId = workbook.addImage({
+              filename: qrPath,
+              extension: 'png',
+            });
+            sheet.addImage(imageId, {
+              tl: { col: 7, row: rowIndex - 1 },
+              ext: { width: 100, height: 100 },
+            });
+          } catch (imgErr) {
+            console.warn(`Failed to add QR image for row ${row.id}:`, imgErr.message);
+          }
         }
+        rowIndex += 1;
+      } catch (rowErr) {
+        // Log error but continue processing other rows
+        console.error(`Error processing row ${row.id} for export:`, rowErr);
+        // Still add the row with available data
+        sheet.addRow({
+          no: i + 1,
+          nomor_surat: row.nomor_surat || 'N/A',
+          perihal: row.perihal || 'N/A',
+          penandatangan: row.penandatangan || 'N/A',
+          tanggal_surat: row.tanggal_surat || 'N/A',
+          data_hash: row.data_hash || 'N/A',
+          signature_hash: row.signature_hash || 'N/A',
+        });
+        rowIndex += 1;
       }
-      
-      const verificationUrl = `${getBaseUrl(req)}/verify?id=${row.id}&nonce=${row.nonce}`;
-      const qrPath = await ensureQrExists(row.id, verificationUrl);
-
-      sheet.addRow({
-        no: i + 1,
-        nomor_surat: row.nomor_surat,
-        perihal: row.perihal,
-        penandatangan: row.penandatangan,
-        tanggal_surat: row.tanggal_surat,
-        data_hash: dataHash || 'N/A',
-        signature_hash: signatureHash || 'N/A',
-      });
-
-      const imageId = workbook.addImage({
-        filename: qrPath,
-        extension: 'png',
-      });
-      sheet.addImage(imageId, {
-        tl: { col: 7, row: rowIndex - 1 },
-        ext: { width: 100, height: 100 },
-      });
-      rowIndex += 1;
     }
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
