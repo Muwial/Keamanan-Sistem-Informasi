@@ -3,26 +3,23 @@ node_modules/
 package-lock.json
 
 # Database
-data/*.db
-data/*.db-journal
+data/
+*.db
+*.sqlite
+*.sqlite3
 
 # Uploaded files
-uploads/*
-!uploads/.gitkeep
-
-# Signature files
-signatures/*
-!signatures/.gitkeep
-
-# QR Code files
-qrcodes/*
-!qrcodes/.gitkeep
+uploads/
+signatures/
+qrcodes/
 
 # Environment variables
 .env
 .env.local
+.env.*.local
 
 # Logs
+logs/
 *.log
 npm-debug.log*
 
@@ -39,6 +36,7 @@ desktop.ini
 *~
 
 # Temporary files
+tmp/
+temp/
 *.tmp
-*.temp
 

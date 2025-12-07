@@ -63,7 +63,7 @@ const loadData = async () => {
     if (data.length === 0) {
       tableBody.innerHTML = '<tr><td colspan="7" class="muted" style="text-align:center; padding:40px;">Belum ada data surat. <a href="/" style="color:#3b82f6;">Input surat baru</a></td></tr>';
     } else {
-      renderRows(data);
+    renderRows(data);
       console.log('Table rendered with', data.length, 'rows');
       
       // Show count
