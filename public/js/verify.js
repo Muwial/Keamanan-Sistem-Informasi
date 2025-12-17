@@ -43,9 +43,10 @@ const renderSuccess = (data) => {
           <div class="info-item"><strong>Nomor Sertifikat</strong><br>${escapeHtml(data.nomor_sertifikat || '')}</div>
           <div class="info-item"><strong>Nama Penandatangan</strong><br>${escapeHtml(data.nama_penandatangan || '')}</div>
           <div class="info-item"><strong>Jabatan Penandatangan</strong><br>${escapeHtml(data.jabatan_penandatangan || '')}</div>
-          <div class="info-item"><strong>Waktu Penandatangan</strong><br>${escapeHtml(data.waktu_penandatangan || '')}</div>
+          <div class="info-item"><strong>Tanggal Penandatanganan</strong><br>${escapeHtml(data.waktu_penandatangan || '')}</div>
           <div class="info-item"><strong>Nama Instansi/Organisasi</strong><br>${escapeHtml(data.nama_instansi || '')}</div>
           <div class="info-item"><strong>Nama Kegiatan/Pelatihan</strong><br>${escapeHtml(data.nama_kegiatan || '')}</div>
+          <div class="info-item"><strong>Berlaku Hingga</strong><br>${escapeHtml(data.berlaku_hingga || 'Selamanya')}</div>
           <div class="info-item"><strong>Tanggal Pelaksanaan</strong><br>${escapeHtml(data.tanggal_pelaksanaan || '')}</div>
         </div>
       `;

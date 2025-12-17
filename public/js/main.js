@@ -59,6 +59,8 @@ function init() {
       const namaPenandatanganSertifikat = document.getElementById('nama_penandatangan_sertifikat');
       const jabatanPenandatangan = document.getElementById('jabatan_penandatangan');
       const waktuPenandatangan = document.getElementById('waktu_penandatangan');
+      const berlakuHingga = document.getElementById('berlaku_hingga');
+      const berlakuSelamanya = document.getElementById('berlaku_selamanya');
       const namaInstansi = document.getElementById('nama_instansi');
       const namaKegiatan = document.getElementById('nama_kegiatan');
       const tanggalPelaksanaan = document.getElementById('tanggal_pelaksanaan');
@@ -67,6 +69,9 @@ function init() {
       if (namaPenandatanganSertifikat) namaPenandatanganSertifikat.setAttribute('required', 'required');
       if (jabatanPenandatangan) jabatanPenandatangan.setAttribute('required', 'required');
       if (waktuPenandatangan) waktuPenandatangan.setAttribute('required', 'required');
+      if (berlakuHingga && (!berlakuSelamanya || !berlakuSelamanya.checked)) {
+        berlakuHingga.setAttribute('required', 'required');
+      }
       if (namaInstansi) namaInstansi.setAttribute('required', 'required');
       if (namaKegiatan) namaKegiatan.setAttribute('required', 'required');
       if (tanggalPelaksanaan) tanggalPelaksanaan.setAttribute('required', 'required');
@@ -78,6 +83,27 @@ function init() {
     documentTypeSelect.addEventListener('change', handleDocumentTypeChange);
     // Initialize on load
     handleDocumentTypeChange();
+  }
+
+  // Handle "berlaku selamanya" checkbox toggle
+  const berlakuSelamanya = document.getElementById('berlaku_selamanya');
+  const berlakuHinggaInput = document.getElementById('berlaku_hingga');
+  if (berlakuSelamanya && berlakuHinggaInput) {
+    const syncBerlakuState = () => {
+      if (berlakuSelamanya.checked) {
+        berlakuHinggaInput.value = '';
+        berlakuHinggaInput.removeAttribute('required');
+        berlakuHinggaInput.disabled = true;
+      } else {
+        berlakuHinggaInput.disabled = false;
+        // Re-apply required only for sertifikat mode
+        if (documentTypeSelect && documentTypeSelect.value === 'sertifikat') {
+          berlakuHinggaInput.setAttribute('required', 'required');
+        }
+      }
+    };
+    berlakuSelamanya.addEventListener('change', syncBerlakuState);
+    syncBerlakuState();
   }
 
   // Check nomor surat availability on blur (only for surat)
@@ -184,6 +210,16 @@ form.addEventListener('submit', async (e) => {
     submitBtn.textContent = 'Menyimpan...';
 
   const formData = new FormData(form);
+
+  // If berlaku selamanya is checked, send explicit flag and clear date value
+  const berlakuSelamanya = document.getElementById('berlaku_selamanya');
+  const berlakuHinggaInput = document.getElementById('berlaku_hingga');
+  if (berlakuSelamanya && berlakuSelamanya.checked) {
+    formData.set('berlaku_selamanya', 'true');
+    if (berlakuHinggaInput) {
+      formData.set('berlaku_hingga', '');
+    }
+  }
 
   try {
     const res = await fetch('/api/letters', {

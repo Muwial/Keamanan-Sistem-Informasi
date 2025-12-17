@@ -31,6 +31,7 @@ db.serialize(() => {
       nama_instansi TEXT,
       nama_kegiatan TEXT,
       tanggal_pelaksanaan TEXT,
+      berlaku_hingga TEXT,
       -- Common fields
       file_path TEXT,
       tanda_tangan_path TEXT,
@@ -77,6 +78,9 @@ db.serialize(() => {
     // Ignore error if column already exists
   });
   db.run(`ALTER TABLE letters ADD COLUMN tanggal_pelaksanaan TEXT`, (err) => {
+    // Ignore error if column already exists
+  });
+  db.run(`ALTER TABLE letters ADD COLUMN berlaku_hingga TEXT`, (err) => {
     // Ignore error if column already exists
   });
   // Add jabatan for surat

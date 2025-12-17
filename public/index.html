@@ -90,8 +90,8 @@
               <input type="text" id="jabatan_penandatangan" name="jabatan_penandatangan" placeholder="Jabatan penandatangan">
             </div>
             <div>
-              <label for="waktu_penandatangan">Waktu Penandatangan *</label>
-              <input type="datetime-local" id="waktu_penandatangan" name="waktu_penandatangan">
+              <label for="waktu_penandatangan">Tanggal Penandatanganan *</label>
+              <input type="date" id="waktu_penandatangan" name="waktu_penandatangan">
             </div>
             <div>
               <label for="nama_instansi">Nama Instansi/Organisasi *</label>
@@ -104,6 +104,14 @@
             <div>
               <label for="tanggal_pelaksanaan">Tanggal Pelaksanaan *</label>
               <input type="date" id="tanggal_pelaksanaan" name="tanggal_pelaksanaan">
+            </div>
+            <div>
+              <label for="berlaku_hingga">Berlaku hingga</label>
+              <input type="date" id="berlaku_hingga" name="berlaku_hingga">
+              <label style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                <input type="checkbox" id="berlaku_selamanya" name="berlaku_selamanya">
+                <span class="muted">Tidak ada tanggal berakhir (selamanya)</span>
+              </label>
             </div>
           </div>
         </div>

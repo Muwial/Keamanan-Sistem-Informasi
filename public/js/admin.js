@@ -31,7 +31,7 @@ const renderRows = (rows) => {
       displayField1 = row.nama_peserta || 'N/A';
       displayField2 = row.nomor_sertifikat || 'N/A';
       displayField3 = row.nama_penandatangan || 'N/A';
-      displayField4 = row.tanggal_pelaksanaan || 'N/A';
+    displayField4 = row.berlaku_hingga || row.tanggal_pelaksanaan || 'Selamanya';
     } else {
       displayField1 = row.nomor_surat || 'N/A';
       displayField2 = row.perihal || 'N/A';

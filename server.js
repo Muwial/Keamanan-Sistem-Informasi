@@ -104,6 +104,7 @@ const generateDataHash = (data) => {
       nama_penandatangan: data.nama_penandatangan,
       jabatan_penandatangan: data.jabatan_penandatangan,
       waktu_penandatangan: data.waktu_penandatangan,
+      berlaku_hingga: data.berlaku_hingga || 'Selamanya',
       nama_instansi: data.nama_instansi,
       nama_kegiatan: data.nama_kegiatan,
       tanggal_pelaksanaan: data.tanggal_pelaksanaan,
@@ -152,9 +153,10 @@ const verifyDataIntegrity = (row) => {
       document_type: documentType,
       nama_peserta: row.nama_peserta,
       nomor_sertifikat: row.nomor_sertifikat,
-      nama_penandatangan: row.nama_penandatangan,
-      jabatan_penandatangan: row.jabatan_penandatangan,
-      waktu_penandatangan: row.waktu_penandatangan,
+          nama_penandatangan: row.nama_penandatangan,
+          jabatan_penandatangan: row.jabatan_penandatangan,
+          waktu_penandatangan: row.waktu_penandatangan,
+          berlaku_hingga: row.berlaku_hingga || 'Selamanya',
       nama_instansi: row.nama_instansi,
       nama_kegiatan: row.nama_kegiatan,
       tanggal_pelaksanaan: row.tanggal_pelaksanaan,
@@ -379,6 +381,9 @@ app.post(
         const namaPenandatangan = sanitize(req.body.nama_penandatangan_sertifikat);
         const jabatanPenandatangan = sanitize(req.body.jabatan_penandatangan);
         const waktuPenandatangan = sanitize(req.body.waktu_penandatangan);
+        const berlakuSelamanya = req.body.berlaku_selamanya === 'true';
+        const berlakuHinggaRaw = sanitize(req.body.berlaku_hingga);
+        const berlakuHingga = berlakuSelamanya ? 'Selamanya' : (berlakuHinggaRaw || 'Selamanya');
         const namaInstansi = sanitize(req.body.nama_instansi);
         const namaKegiatan = sanitize(req.body.nama_kegiatan);
         const tanggalPelaksanaan = sanitize(req.body.tanggal_pelaksanaan);
@@ -448,6 +453,9 @@ app.post(
         const namaPenandatangan = sanitize(req.body.nama_penandatangan_sertifikat);
         const jabatanPenandatangan = sanitize(req.body.jabatan_penandatangan);
         const waktuPenandatangan = sanitize(req.body.waktu_penandatangan);
+        const berlakuSelamanya = req.body.berlaku_selamanya === 'true';
+        const berlakuHinggaRaw = sanitize(req.body.berlaku_hingga);
+        const berlakuHingga = berlakuSelamanya ? 'Selamanya' : (berlakuHinggaRaw || 'Selamanya');
         const namaInstansi = sanitize(req.body.nama_instansi);
         const namaKegiatan = sanitize(req.body.nama_kegiatan);
         const tanggalPelaksanaan = sanitize(req.body.tanggal_pelaksanaan);
@@ -459,15 +467,16 @@ app.post(
           nama_penandatangan: namaPenandatangan,
           jabatan_penandatangan: jabatanPenandatangan,
           waktu_penandatangan: waktuPenandatangan,
+          berlaku_hingga: berlakuHingga,
           nama_instansi: namaInstansi,
           nama_kegiatan: namaKegiatan,
           tanggal_pelaksanaan: tanggalPelaksanaan,
         };
         
         insertSQL = `INSERT INTO letters 
-          (document_type, nama_peserta, nomor_sertifikat, nama_penandatangan, jabatan_penandatangan, waktu_penandatangan, nama_instansi, nama_kegiatan, tanggal_pelaksanaan, file_path, tanda_tangan_path, nonce, data_hash, signature_hash, created_at)
+          (document_type, nama_peserta, nomor_sertifikat, nama_penandatangan, jabatan_penandatangan, waktu_penandatangan, berlaku_hingga, nama_instansi, nama_kegiatan, tanggal_pelaksanaan, file_path, tanda_tangan_path, nonce, data_hash, signature_hash, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`;
-        insertParams = [documentType, namaPeserta, nomorSertifikat, namaPenandatangan, jabatanPenandatangan, waktuPenandatangan, namaInstansi, namaKegiatan, tanggalPelaksanaan, filePath, tandaTanganPath, nonce];
+        insertParams = [documentType, namaPeserta, nomorSertifikat, namaPenandatangan, jabatanPenandatangan, waktuPenandatangan, berlakuHingga, namaInstansi, namaKegiatan, tanggalPelaksanaan, filePath, tandaTanganPath, nonce];
       }
 
       // Generate digital signature hash
@@ -556,6 +565,7 @@ app.get('/api/letters', async (req, res) => {
               nama_penandatangan: row.nama_penandatangan,
               jabatan_penandatangan: row.jabatan_penandatangan,
               waktu_penandatangan: row.waktu_penandatangan,
+              berlaku_hingga: row.berlaku_hingga || '',
               nama_instansi: row.nama_instansi,
               nama_kegiatan: row.nama_kegiatan,
               tanggal_pelaksanaan: row.tanggal_pelaksanaan,
@@ -679,6 +689,7 @@ app.get(
           nama_penandatangan: row.nama_penandatangan,
           jabatan_penandatangan: row.jabatan_penandatangan,
           waktu_penandatangan: row.waktu_penandatangan,
+          berlaku_hingga: row.berlaku_hingga || 'Selamanya',
           nama_instansi: row.nama_instansi,
           nama_kegiatan: row.nama_kegiatan,
           tanggal_pelaksanaan: row.tanggal_pelaksanaan,
@@ -784,7 +795,8 @@ app.get('/api/export/excel', async (req, res) => {
       { header: 'Nomor Sertifikat', key: 'nomor_sertifikat', width: 25 },
       { header: 'Nama Penandatangan', key: 'nama_penandatangan', width: 25 },
       { header: 'Jabatan Penandatangan', key: 'jabatan_penandatangan', width: 30 },
-      { header: 'Waktu Penandatangan', key: 'waktu_penandatangan', width: 25 },
+      { header: 'Tanggal Penandatanganan', key: 'waktu_penandatangan', width: 22 },
+      { header: 'Berlaku Hingga', key: 'berlaku_hingga', width: 20 },
       { header: 'Nama Instansi/Organisasi', key: 'nama_instansi', width: 30 },
       { header: 'Nama Kegiatan/Pelatihan', key: 'nama_kegiatan', width: 35 },
       { header: 'Tanggal Pelaksanaan', key: 'tanggal_pelaksanaan', width: 20 },
@@ -813,6 +825,7 @@ app.get('/api/export/excel', async (req, res) => {
               nama_penandatangan: row.nama_penandatangan,
               jabatan_penandatangan: row.jabatan_penandatangan,
               waktu_penandatangan: row.waktu_penandatangan,
+              berlaku_hingga: row.berlaku_hingga || '',
               nama_instansi: row.nama_instansi,
               nama_kegiatan: row.nama_kegiatan,
               tanggal_pelaksanaan: row.tanggal_pelaksanaan,
@@ -853,7 +866,8 @@ app.get('/api/export/excel', async (req, res) => {
             nomor_sertifikat: row.nomor_sertifikat || 'N/A',
             nama_penandatangan: row.nama_penandatangan || 'N/A',
             jabatan_penandatangan: row.jabatan_penandatangan || 'N/A',
-            waktu_penandatangan: row.waktu_penandatangan || 'N/A',
+              waktu_penandatangan: row.waktu_penandatangan || 'N/A',
+              berlaku_hingga: row.berlaku_hingga || 'Selamanya',
             nama_instansi: row.nama_instansi || 'N/A',
             nama_kegiatan: row.nama_kegiatan || 'N/A',
             tanggal_pelaksanaan: row.tanggal_pelaksanaan || 'N/A',
@@ -869,7 +883,7 @@ app.get('/api/export/excel', async (req, res) => {
                 extension: 'png',
               });
               sertifikatSheet.addImage(imageId, {
-                tl: { col: 11, row: sertifikatRowIndex - 1 },
+                tl: { col: 12, row: sertifikatRowIndex - 1 },
                 ext: { width: 100, height: 100 },
               });
             } catch (imgErr) {
@@ -921,6 +935,7 @@ app.get('/api/export/excel', async (req, res) => {
             nama_penandatangan: row.nama_penandatangan || 'N/A',
             jabatan_penandatangan: row.jabatan_penandatangan || 'N/A',
             waktu_penandatangan: row.waktu_penandatangan || 'N/A',
+            berlaku_hingga: row.berlaku_hingga || 'Selamanya',
             nama_instansi: row.nama_instansi || 'N/A',
             nama_kegiatan: row.nama_kegiatan || 'N/A',
             tanggal_pelaksanaan: row.tanggal_pelaksanaan || 'N/A',
