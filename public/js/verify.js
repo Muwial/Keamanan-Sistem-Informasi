@@ -31,19 +31,44 @@ const renderSuccess = (data) => {
       return div.innerHTML;
     };
     
+    const documentType = data.document_type || 'surat';
+    const docTypeLabel = documentType === 'sertifikat' ? 'Sertifikat' : 'Surat';
+    const docTypeMessage = documentType === 'sertifikat' ? 'Sertifikat terverifikasi dan sah.' : 'Surat terverifikasi dan sah.';
+    
+    let infoGridHTML = '';
+    if (documentType === 'sertifikat') {
+      infoGridHTML = `
+        <div class="info-grid" style="margin-top:16px;">
+          <div class="info-item"><strong>Nama Peserta</strong><br>${escapeHtml(data.nama_peserta || '')}</div>
+          <div class="info-item"><strong>Nomor Sertifikat</strong><br>${escapeHtml(data.nomor_sertifikat || '')}</div>
+          <div class="info-item"><strong>Nama Penandatangan</strong><br>${escapeHtml(data.nama_penandatangan || '')}</div>
+          <div class="info-item"><strong>Jabatan Penandatangan</strong><br>${escapeHtml(data.jabatan_penandatangan || '')}</div>
+          <div class="info-item"><strong>Waktu Penandatangan</strong><br>${escapeHtml(data.waktu_penandatangan || '')}</div>
+          <div class="info-item"><strong>Nama Instansi/Organisasi</strong><br>${escapeHtml(data.nama_instansi || '')}</div>
+          <div class="info-item"><strong>Nama Kegiatan/Pelatihan</strong><br>${escapeHtml(data.nama_kegiatan || '')}</div>
+          <div class="info-item"><strong>Tanggal Pelaksanaan</strong><br>${escapeHtml(data.tanggal_pelaksanaan || '')}</div>
+        </div>
+      `;
+    } else {
+      infoGridHTML = `
+        <div class="info-grid" style="margin-top:16px;">
+          <div class="info-item"><strong>Nomor Surat</strong><br>${escapeHtml(data.nomor_surat || '')}</div>
+          <div class="info-item"><strong>Perihal</strong><br>${escapeHtml(data.perihal || '')}</div>
+          <div class="info-item"><strong>Nama Penandatangan</strong><br>${escapeHtml(data.penandatangan || '')}</div>
+          <div class="info-item"><strong>Jabatan Penandatangan</strong><br>${escapeHtml(data.jabatan_surat || '')}</div>
+          <div class="info-item"><strong>Tanggal Surat</strong><br>${escapeHtml(data.tanggal_surat || '')}</div>
+        </div>
+      `;
+    }
+    
   container.innerHTML = `
     <div class="status success">VERIFIED</div>
-    <p class="muted">Surat terverifikasi dan sah.</p>
-    <div class="info-grid" style="margin-top:16px;">
-        <div class="info-item"><strong>Nomor Surat</strong><br>${escapeHtml(data.nomor_surat || '')}</div>
-        <div class="info-item"><strong>Perihal</strong><br>${escapeHtml(data.perihal || '')}</div>
-        <div class="info-item"><strong>Nama Penandatangan</strong><br>${escapeHtml(data.penandatangan || '')}</div>
-        <div class="info-item"><strong>Tanggal Surat</strong><br>${escapeHtml(data.tanggal_surat || '')}</div>
-    </div>
+    <p class="muted">${docTypeMessage}</p>
+    ${infoGridHTML}
       <div style="margin-top:20px; display:flex; flex-direction:column; gap:16px;">
       ${
         data.download_url
-            ? `<a class="btn-primary" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;" href="${escapeHtml(data.download_url)}">📄 Download Surat PDF</a>`
+            ? `<a class="btn-primary" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;" href="${escapeHtml(data.download_url)}">📄 Download ${docTypeLabel} PDF</a>`
             : ''
         }
         ${
@@ -84,7 +109,7 @@ const renderSuccess = (data) => {
         }
         ${
           !data.download_url && !data.tanda_tangan_url
-            ? '<div style="padding:16px; background:rgba(30, 41, 59, 0.5); border-radius:12px; text-align:center;"><span class="muted">Tidak ada file surat atau tanda tangan terlampir.</span></div>'
+            ? `<div style="padding:16px; background:rgba(30, 41, 59, 0.5); border-radius:12px; text-align:center;"><span class="muted">Tidak ada file ${docTypeLabel.toLowerCase()} atau tanda tangan terlampir.</span></div>`
             : ''
       }
     </div>

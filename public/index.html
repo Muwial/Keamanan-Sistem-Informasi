@@ -26,30 +26,96 @@
     </header>
 
     <div class="card">
-      <h2>Input Data Surat</h2>
+      <h2>Input Data Dokumen</h2>
       <p class="muted">Lengkapi data berikut untuk membuat QR Code verifikasi.</p>
       <div class="divider"></div>
       <form id="letterForm" enctype="multipart/form-data">
         <div class="grid">
-          <div>
-            <label for="nomor_surat">Nomor Surat</label>
-            <input type="text" id="nomor_surat" name="nomor_surat" placeholder="Contoh: 123/DS/2025" required>
+          <div style="grid-column: 1 / -1;">
+            <label for="document_type">Format Dokumen</label>
+            <select id="document_type" name="document_type" required>
+              <option value="surat">Surat Resmi</option>
+              <option value="sertifikat">Sertifikat</option>
+            </select>
           </div>
-          <div>
-            <label for="perihal">Perihal</label>
-            <input type="text" id="perihal" name="perihal" placeholder="Perihal surat" required>
+        </div>
+        
+        <!-- Surat Fields -->
+        <div id="suratFields" class="document-fields">
+          <div class="divider" style="margin: 20px 0;"></div>
+          <h3 style="margin-bottom: 16px; font-size: 18px;">Data Surat</h3>
+          <div class="grid">
+            <div>
+              <label for="nomor_surat">Nomor Surat</label>
+              <input type="text" id="nomor_surat" name="nomor_surat" placeholder="Contoh: 123/DS/2025">
+            </div>
+            <div>
+              <label for="perihal">Perihal</label>
+              <input type="text" id="perihal" name="perihal" placeholder="Perihal surat">
+            </div>
+            <div>
+              <label for="penandatangan_surat">Nama Penandatangan</label>
+              <input type="text" id="penandatangan_surat" name="penandatangan_surat" placeholder="Nama penandatangan">
+            </div>
+            <div>
+              <label for="jabatan_surat">Jabatan Penandatangan</label>
+              <input type="text" id="jabatan_surat" name="jabatan_surat" placeholder="Jabatan penandatangan">
+            </div>
+            <div>
+              <label for="tanggal_surat">Tanggal Surat</label>
+              <input type="date" id="tanggal_surat" name="tanggal_surat">
+            </div>
           </div>
-          <div>
-            <label for="penandatangan">Nama Penandatangan</label>
-            <input type="text" id="penandatangan" name="penandatangan" placeholder="Nama penandatangan" required>
+        </div>
+        
+        <!-- Sertifikat Fields -->
+        <div id="sertifikatFields" class="document-fields" style="display:none;">
+          <div class="divider" style="margin: 20px 0;"></div>
+          <h3 style="margin-bottom: 16px; font-size: 18px;">Data Sertifikat</h3>
+          <div class="grid">
+            <div>
+              <label for="nama_peserta">Nama Peserta *</label>
+              <input type="text" id="nama_peserta" name="nama_peserta" placeholder="Nama lengkap peserta">
+            </div>
+            <div>
+              <label for="nomor_sertifikat">Nomor Sertifikat *</label>
+              <input type="text" id="nomor_sertifikat" name="nomor_sertifikat" placeholder="Nomor sertifikat">
+            </div>
+            <div>
+              <label for="nama_penandatangan_sertifikat">Nama Penandatangan *</label>
+              <input type="text" id="nama_penandatangan_sertifikat" name="nama_penandatangan_sertifikat" placeholder="Nama penandatangan">
+            </div>
+            <div>
+              <label for="jabatan_penandatangan">Jabatan Penandatangan *</label>
+              <input type="text" id="jabatan_penandatangan" name="jabatan_penandatangan" placeholder="Jabatan penandatangan">
+            </div>
+            <div>
+              <label for="waktu_penandatangan">Waktu Penandatangan *</label>
+              <input type="datetime-local" id="waktu_penandatangan" name="waktu_penandatangan">
+            </div>
+            <div>
+              <label for="nama_instansi">Nama Instansi/Organisasi *</label>
+              <input type="text" id="nama_instansi" name="nama_instansi" placeholder="Nama instansi atau organisasi">
+            </div>
+            <div>
+              <label for="nama_kegiatan">Nama Kegiatan/Pelatihan *</label>
+              <input type="text" id="nama_kegiatan" name="nama_kegiatan" placeholder="Nama kegiatan atau pelatihan">
+            </div>
+            <div>
+              <label for="tanggal_pelaksanaan">Tanggal Pelaksanaan *</label>
+              <input type="date" id="tanggal_pelaksanaan" name="tanggal_pelaksanaan">
+            </div>
           </div>
+        </div>
+        
+        <!-- Common Fields -->
+        <div class="divider" style="margin: 20px 0;"></div>
+        <h3 style="margin-bottom: 16px; font-size: 18px;">Upload File</h3>
+        <div class="grid">
           <div>
-            <label for="tanggal_surat">Tanggal Surat</label>
-            <input type="date" id="tanggal_surat" name="tanggal_surat" required>
-          </div>
-          <div>
-            <label for="file">Upload File Surat (PDF, opsional)</label>
+            <label for="file">Upload File (PDF, opsional)</label>
             <input type="file" id="file" name="file" accept="application/pdf">
+            <p class="muted" style="font-size:12px; margin-top:8px;">Format: PDF, maksimal 5MB</p>
           </div>
           <div>
             <label for="tanda_tangan">Upload Gambar Tanda Tangan (JPG/PNG, opsional)</label>
@@ -63,6 +129,7 @@
             <p class="muted" style="font-size:12px; margin-top:8px;">Format: JPG atau PNG, maksimal 2MB</p>
           </div>
         </div>
+        
         <div style="margin-top:18px; display:flex; gap:12px; align-items:center;">
           <button type="submit" class="btn-primary">Simpan &amp; Generate QR</button>
           <span id="statusText" class="muted"></span>

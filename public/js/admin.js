@@ -22,13 +22,30 @@ const renderRows = (rows) => {
   tableBody.innerHTML = '';
   rows.forEach((row, idx) => {
     const hashShort = row.data_hash ? row.data_hash.substring(0, 12) + '...' : 'N/A';
+    const documentType = row.document_type || 'surat';
+    const docTypeLabel = documentType === 'sertifikat' ? 'Sertifikat' : 'Surat';
+    
+    // Determine display fields based on document type
+    let displayField1, displayField2, displayField3, displayField4;
+    if (documentType === 'sertifikat') {
+      displayField1 = row.nama_peserta || 'N/A';
+      displayField2 = row.nomor_sertifikat || 'N/A';
+      displayField3 = row.nama_penandatangan || 'N/A';
+      displayField4 = row.tanggal_pelaksanaan || 'N/A';
+    } else {
+      displayField1 = row.nomor_surat || 'N/A';
+      displayField2 = row.perihal || 'N/A';
+      displayField3 = row.penandatangan || 'N/A';
+      displayField4 = row.tanggal_surat || 'N/A';
+    }
+    
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${idx + 1}</td>
-      <td>${row.nomor_surat}</td>
-      <td>${row.perihal}</td>
-      <td>${row.penandatangan}</td>
-      <td>${row.tanggal_surat}</td>
+      <td><span class="pill" style="font-size:11px; padding:4px 8px; margin-right:8px;">${docTypeLabel}</span>${displayField1}</td>
+      <td>${displayField2}</td>
+      <td>${displayField3}</td>
+      <td>${displayField4}</td>
       <td>
         <a href="${row.qr_image}" download="qr-code-${row.id}-${row.data_hash ? row.data_hash.substring(0, 8) : ''}.png" target="_blank">
           <img class="qr-thumb" src="${row.qr_image}" alt="qr">
@@ -40,7 +57,7 @@ const renderRows = (rows) => {
       <td class="table-actions">
         <a class="btn-ghost" href="${row.qr_image}" download="qr-code-${row.id}-${row.data_hash ? row.data_hash.substring(0, 8) : ''}.png">Download QR</a>
         <a class="btn-ghost" href="${row.verification_url}" target="_blank">Buka Verifikasi</a>
-        ${row.download_url ? `<a class="btn-ghost" href="${row.download_url}">Download Surat</a>` : '<span class="muted">Tidak ada file</span>'}
+        ${row.download_url ? `<a class="btn-ghost" href="${row.download_url}">Download ${docTypeLabel}</a>` : '<span class="muted">Tidak ada file</span>'}
         ${row.tanda_tangan_url ? `<a class="btn-ghost" href="${row.tanda_tangan_url}" target="_blank">Lihat Tanda Tangan</a>` : ''}
         <button class="btn-danger" data-id="${row.id}">Hapus</button>
       </td>
@@ -61,7 +78,7 @@ const loadData = async () => {
     console.log('Data details:', data);
     
     if (data.length === 0) {
-      tableBody.innerHTML = '<tr><td colspan="7" class="muted" style="text-align:center; padding:40px;">Belum ada data surat. <a href="/" style="color:#3b82f6;">Input surat baru</a></td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="7" class="muted" style="text-align:center; padding:40px;">Belum ada data dokumen. <a href="/" style="color:#3b82f6;">Input dokumen baru</a></td></tr>';
     } else {
     renderRows(data);
       console.log('Table rendered with', data.length, 'rows');
@@ -69,7 +86,9 @@ const loadData = async () => {
       // Show count
       const countInfo = document.getElementById('dataCount');
       if (countInfo) {
-        countInfo.textContent = `Total: ${data.length} surat`;
+        const suratCount = data.filter(r => (r.document_type || 'surat') === 'surat').length;
+        const sertifikatCount = data.filter(r => r.document_type === 'sertifikat').length;
+        countInfo.textContent = `Total: ${data.length} dokumen (${suratCount} surat, ${sertifikatCount} sertifikat)`;
       }
     }
   } catch (err) {

@@ -1,6 +1,7 @@
 // Wait for DOM to be ready
 let form, statusText, resultBox, qrPreview, verificationLink, downloadQrBtn;
 let signatureInput, signaturePreview, signaturePreviewImg, nomorSuratInput;
+let documentTypeSelect, suratFields, sertifikatFields;
 
 let currentQrId = null;
 
@@ -16,6 +17,9 @@ function init() {
   signaturePreview = document.getElementById('signaturePreview');
   signaturePreviewImg = document.getElementById('signaturePreviewImg');
   nomorSuratInput = document.getElementById('nomor_surat');
+  documentTypeSelect = document.getElementById('document_type');
+  suratFields = document.getElementById('suratFields');
+  sertifikatFields = document.getElementById('sertifikatFields');
 
   // Check if required elements exist
   if (!form || !statusText || !resultBox) {
@@ -23,7 +27,60 @@ function init() {
     return false;
   }
 
-  // Check nomor surat availability on blur
+  // Function to handle document type change
+  function handleDocumentTypeChange() {
+    const docType = documentTypeSelect.value;
+    if (docType === 'surat') {
+      if (suratFields) suratFields.style.display = 'block';
+      if (sertifikatFields) sertifikatFields.style.display = 'none';
+      // Set required attributes for surat fields
+      const nomorSurat = document.getElementById('nomor_surat');
+      const perihal = document.getElementById('perihal');
+      const penandatanganSurat = document.getElementById('penandatangan_surat');
+      const jabatanSurat = document.getElementById('jabatan_surat');
+      const tanggalSurat = document.getElementById('tanggal_surat');
+      if (nomorSurat) nomorSurat.setAttribute('required', 'required');
+      if (perihal) perihal.setAttribute('required', 'required');
+      if (penandatanganSurat) penandatanganSurat.setAttribute('required', 'required');
+      if (jabatanSurat) jabatanSurat.setAttribute('required', 'required');
+      if (tanggalSurat) tanggalSurat.setAttribute('required', 'required');
+      // Remove required from sertifikat fields
+      const sertifikatInputs = sertifikatFields ? sertifikatFields.querySelectorAll('input[required]') : [];
+      sertifikatInputs.forEach(input => input.removeAttribute('required'));
+    } else if (docType === 'sertifikat') {
+      if (suratFields) suratFields.style.display = 'none';
+      if (sertifikatFields) sertifikatFields.style.display = 'block';
+      // Remove required from surat fields
+      const suratInputs = suratFields ? suratFields.querySelectorAll('input[required]') : [];
+      suratInputs.forEach(input => input.removeAttribute('required'));
+      // Set required attributes for sertifikat fields
+      const namaPeserta = document.getElementById('nama_peserta');
+      const nomorSertifikat = document.getElementById('nomor_sertifikat');
+      const namaPenandatanganSertifikat = document.getElementById('nama_penandatangan_sertifikat');
+      const jabatanPenandatangan = document.getElementById('jabatan_penandatangan');
+      const waktuPenandatangan = document.getElementById('waktu_penandatangan');
+      const namaInstansi = document.getElementById('nama_instansi');
+      const namaKegiatan = document.getElementById('nama_kegiatan');
+      const tanggalPelaksanaan = document.getElementById('tanggal_pelaksanaan');
+      if (namaPeserta) namaPeserta.setAttribute('required', 'required');
+      if (nomorSertifikat) nomorSertifikat.setAttribute('required', 'required');
+      if (namaPenandatanganSertifikat) namaPenandatanganSertifikat.setAttribute('required', 'required');
+      if (jabatanPenandatangan) jabatanPenandatangan.setAttribute('required', 'required');
+      if (waktuPenandatangan) waktuPenandatangan.setAttribute('required', 'required');
+      if (namaInstansi) namaInstansi.setAttribute('required', 'required');
+      if (namaKegiatan) namaKegiatan.setAttribute('required', 'required');
+      if (tanggalPelaksanaan) tanggalPelaksanaan.setAttribute('required', 'required');
+    }
+  }
+  
+  // Handle document type change
+  if (documentTypeSelect) {
+    documentTypeSelect.addEventListener('change', handleDocumentTypeChange);
+    // Initialize on load
+    handleDocumentTypeChange();
+  }
+
+  // Check nomor surat availability on blur (only for surat)
   if (nomorSuratInput && statusText) {
     let checkTimeout;
     nomorSuratInput.addEventListener('blur', function() {
