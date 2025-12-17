@@ -475,7 +475,7 @@ app.post(
         
         insertSQL = `INSERT INTO letters 
           (document_type, nama_peserta, nomor_sertifikat, nama_penandatangan, jabatan_penandatangan, waktu_penandatangan, berlaku_hingga, nama_instansi, nama_kegiatan, tanggal_pelaksanaan, file_path, tanda_tangan_path, nonce, data_hash, signature_hash, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`;
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`;
         insertParams = [documentType, namaPeserta, nomorSertifikat, namaPenandatangan, jabatanPenandatangan, waktuPenandatangan, berlakuHingga, namaInstansi, namaKegiatan, tanggalPelaksanaan, filePath, tandaTanganPath, nonce];
       }
 
