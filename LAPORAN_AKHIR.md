@@ -25,19 +25,20 @@
 Sistem Verifikasi Tanda Tangan Digital adalah aplikasi web yang dirancang untuk mengimplementasikan konsep tanda tangan digital pada surat sederhana dengan menggunakan metode hash (SHA-256) untuk memastikan integritas data dan keaslian dokumen.
 
 ### 1.2 Tujuan
-- Mengimplementasikan konsep tanda tangan digital untuk kepentingan surat sederhana
+- Mengimplementasikan konsep tanda tangan digital untuk kepentingan surat sederhana dan sertifikat
 - Menerapkan metode hash (SHA-256) untuk enkripsi dan verifikasi integritas data
 - Membuat sistem verifikasi untuk pengecekan validitas tanda tangan
 - Menyediakan antarmuka yang user-friendly dan mobile-friendly
+- Mendukung multiple document types (Surat dan Sertifikat)
 
 ### 1.3 Ruang Lingkup
 Sistem ini mencakup:
-- Input data surat dengan upload file PDF (opsional)
+- Input data surat atau sertifikat dengan upload file PDF (opsional)
 - Upload gambar tanda tangan (JPG/PNG)
-- Generate QR Code untuk verifikasi
+- Generate QR Code dengan logo overlay untuk verifikasi
 - Sistem verifikasi dengan hash SHA-256
-- Dashboard admin untuk manajemen data
-- Export data ke Excel
+- Dashboard admin untuk manajemen data dengan pemisahan tabel Surat dan Sertifikat
+- Export data ke Excel dengan sheet terpisah untuk Surat dan Sertifikat
 
 ---
 
@@ -45,36 +46,41 @@ Sistem ini mencakup:
 
 ### 2.1 Functional Requirements
 
-#### 2.1.1 Input Surat
-- ✅ User dapat menginput data surat (nomor surat, perihal, penandatangan, tanggal)
-- ✅ User dapat upload file PDF surat (opsional)
+#### 2.1.1 Input Dokumen
+- ✅ User dapat memilih format dokumen (Surat atau Sertifikat)
+- ✅ **Untuk Surat**: User dapat menginput data surat (nomor surat, perihal, penandatangan, jabatan, tanggal)
+- ✅ **Untuk Sertifikat**: User dapat menginput data sertifikat (nama peserta, nomor sertifikat, penandatangan, jabatan, waktu penandatanganan, berlaku hingga, nama instansi, nama kegiatan, tanggal pelaksanaan)
+- ✅ User dapat upload file PDF dokumen (opsional)
 - ✅ User dapat upload gambar tanda tangan JPG/PNG (opsional)
-- ✅ Sistem melakukan validasi input
-- ✅ Sistem mencegah duplikasi nomor surat
+- ✅ Sistem melakukan validasi input sesuai tipe dokumen
+- ✅ Sistem mencegah duplikasi nomor surat/nomor sertifikat
 
 #### 2.1.2 Generate QR Code
 - ✅ Sistem otomatis generate QR Code setelah data disimpan
 - ✅ QR Code berisi URL verifikasi dengan ID dan nonce unik
+- ✅ QR Code dengan logo overlay (jika logo tersedia)
 - ✅ QR Code dapat di-download
 
 #### 2.1.3 Digital Signature (Hash)
-- ✅ Sistem generate hash SHA-256 untuk data surat
+- ✅ Sistem generate hash SHA-256 untuk data dokumen (surat atau sertifikat)
 - ✅ Sistem generate hash SHA-256 untuk file tanda tangan
 - ✅ Hash disimpan di database untuk verifikasi
+- ✅ Hash berbeda untuk setiap tipe dokumen sesuai field yang relevan
 
 #### 2.1.4 Verifikasi
-- ✅ User dapat verifikasi surat melalui QR Code
+- ✅ User dapat verifikasi dokumen (surat atau sertifikat) melalui QR Code
 - ✅ Sistem memverifikasi integritas data dengan membandingkan hash
 - ✅ Sistem menampilkan status verifikasi (Verified/Invalid)
 - ✅ Sistem menampilkan informasi hash untuk audit
+- ✅ Sistem menampilkan data sesuai tipe dokumen yang diverifikasi
 
 #### 2.1.5 Dashboard Admin
-- ✅ Admin dapat melihat semua data surat
+- ✅ Admin dapat melihat semua data dokumen dengan pemisahan tabel Surat dan Sertifikat
 - ✅ Admin dapat download QR Code
-- ✅ Admin dapat download file surat
+- ✅ Admin dapat download file dokumen
 - ✅ Admin dapat melihat tanda tangan
 - ✅ Admin dapat hapus data
-- ✅ Admin dapat export data ke Excel
+- ✅ Admin dapat export data ke Excel dengan sheet terpisah untuk Surat dan Sertifikat
 
 ### 2.2 Non-Functional Requirements
 
@@ -111,12 +117,14 @@ Keamanan Sistem Informasi part 2/
 │   │   ├── main.js            # Logic halaman input
 │   │   ├── admin.js           # Logic dashboard admin
 │   │   └── verify.js          # Logic halaman verifikasi
-│   ├── index.html             # Halaman input surat
-│   ├── admin.html             # Dashboard admin
+│   ├── index.html             # Halaman input dokumen
+│   ├── admin.html             # Dashboard admin (dual table)
 │   └── verify.html            # Halaman verifikasi
-├── uploads/                    # File PDF surat
+├── assets/                     # Assets (logo untuk QR Code)
+│   └── Kelompok.png           # Logo untuk overlay QR Code
+├── uploads/                    # File PDF dokumen
 ├── signatures/                 # File gambar tanda tangan
-├── qrcodes/                    # File QR Code PNG
+├── qrcodes/                    # File QR Code PNG (dengan logo)
 ├── server.js                   # Backend server (Express.js)
 ├── db.js                       # Database configuration
 ├── schema.sql                  # Database schema
@@ -162,6 +170,7 @@ Keamanan Sistem Informasi part 2/
         │           │           │
         │  ┌────────▼────────┐  │
         │  │ QR Generator   │  │
+        │  │ + Sharp (Logo) │  │
         │  └────────┬────────┘  │
         └───────────┼────────────┘
                     │
@@ -171,10 +180,21 @@ Keamanan Sistem Informasi part 2/
         │                       │
         │  Table: letters       │
         │  - id                 │
+        │  - document_type      │
         │  - nomor_surat        │
         │  - perihal            │
         │  - penandatangan      │
+        │  - jabatan_surat      │
         │  - tanggal_surat      │
+        │  - nama_peserta       │
+        │  - nomor_sertifikat   │
+        │  - nama_penandatangan │
+        │  - jabatan_penandatangan│
+        │  - waktu_penandatangan│
+        │  - berlaku_hingga     │
+        │  - nama_instansi      │
+        │  - nama_kegiatan      │
+        │  - tanggal_pelaksanaan│
         │  - file_path          │
         │  - tanda_tangan_path  │
         │  - nonce              │
@@ -187,16 +207,31 @@ Keamanan Sistem Informasi part 2/
 ### 3.3 Database Schema
 
 ```sql
-CREATE TABLE letters (
+CREATE TABLE IF NOT EXISTS letters (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  nomor_surat TEXT NOT NULL UNIQUE COLLATE NOCASE,
-  perihal TEXT NOT NULL,
-  penandatangan TEXT NOT NULL,
-  tanggal_surat TEXT NOT NULL,
-  file_path TEXT,                    -- Path file PDF surat
+  -- Document type: 'surat' or 'sertifikat'
+  document_type TEXT DEFAULT 'surat',
+  -- Surat fields
+  nomor_surat TEXT UNIQUE COLLATE NOCASE,
+  perihal TEXT,
+  penandatangan TEXT,
+  jabatan_surat TEXT,
+  tanggal_surat TEXT,
+  -- Sertifikat fields
+  nama_peserta TEXT,
+  nomor_sertifikat TEXT UNIQUE COLLATE NOCASE,
+  nama_penandatangan TEXT,
+  jabatan_penandatangan TEXT,
+  waktu_penandatangan TEXT,
+  berlaku_hingga TEXT,
+  nama_instansi TEXT,
+  nama_kegiatan TEXT,
+  tanggal_pelaksanaan TEXT,
+  -- Common fields
+  file_path TEXT,                    -- Path file PDF dokumen
   tanda_tangan_path TEXT,            -- Path file gambar tanda tangan
   nonce TEXT NOT NULL,                -- UUID untuk keamanan URL
-  data_hash TEXT NOT NULL,            -- SHA-256 hash data surat
+  data_hash TEXT NOT NULL,            -- SHA-256 hash data dokumen
   signature_hash TEXT,                -- SHA-256 hash tanda tangan
   created_at TEXT NOT NULL            -- Timestamp pembuatan
 );
@@ -206,58 +241,81 @@ CREATE TABLE letters (
 
 ## 4. CARA KERJA SISTEM
 
-### 4.1 Flow Input Surat
+### 4.1 Flow Input Dokumen
 
 ```
 1. User mengakses halaman input (/)
    ↓
-2. User mengisi form:
+2. User memilih format dokumen:
+   - Surat Resmi
+   - Sertifikat
+   ↓
+3. User mengisi form sesuai tipe dokumen:
+   
+   **Untuk Surat:**
    - Nomor Surat (required)
    - Perihal (required)
    - Nama Penandatangan (required)
+   - Jabatan Penandatangan (required)
    - Tanggal Surat (required)
+   
+   **Untuk Sertifikat:**
+   - Nama Peserta (required)
+   - Nomor Sertifikat (required)
+   - Nama Penandatangan (required)
+   - Jabatan Penandatangan (required)
+   - Tanggal Penandatanganan (required)
+   - Berlaku Hingga (required, atau "Selamanya")
+   - Nama Instansi/Organisasi (required)
+   - Nama Kegiatan/Pelatihan (required)
+   - Tanggal Pelaksanaan (required)
+   
+   **Umum (opsional):**
    - Upload File PDF (optional)
    - Upload Tanda Tangan (optional)
    ↓
-3. User klik "Simpan & Generate QR"
+4. User klik "Simpan & Generate QR"
    ↓
-4. Client-side validation (HTML5)
+5. Client-side validation (HTML5)
    ↓
-5. POST /api/letters dengan FormData
+6. POST /api/letters dengan FormData
    ↓
-6. Server-side validation (express-validator)
+7. Server-side validation (express-validator)
    ↓
-7. Cek duplikasi nomor surat
+8. Cek duplikasi nomor surat/nomor sertifikat sesuai tipe dokumen
    ↓
-8. Generate Hash SHA-256:
-   - Data Hash: hash dari (nomor_surat, perihal, penandatangan, tanggal_surat)
+9. Generate Hash SHA-256:
+   - Data Hash: hash dari field-field sesuai tipe dokumen
    - Signature Hash: hash dari file gambar tanda tangan (jika ada)
    ↓
-9. Generate Nonce (UUID v4)
-   ↓
-10. Simpan ke database:
-    - Data surat
+10. Generate Nonce (UUID v4)
+    ↓
+11. Simpan ke database:
+    - Data dokumen (surat atau sertifikat)
     - File paths
     - Hash values
     - Nonce
+    - Document type
     ↓
-11. Generate QR Code:
+12. Generate QR Code dengan logo overlay:
     - URL: http://[IP]:3000/verify?id=[id]&nonce=[nonce]
+    - Composite logo di tengah QR Code (jika logo tersedia)
     - Simpan sebagai PNG di folder qrcodes/
     ↓
-12. Return response dengan:
-    - ID surat
+13. Return response dengan:
+    - ID dokumen
     - Verification URL
     - Hash values
+    - Tipe dokumen
     ↓
-13. Client menampilkan:
+14. Client menampilkan:
     - Preview QR Code
     - Hash code
     - Tombol download QR
     - Link verifikasi
 ```
 
-### 4.2 Flow Verifikasi Surat
+### 4.2 Flow Verifikasi Dokumen
 
 ```
 1. User scan QR Code atau akses URL verifikasi
@@ -280,18 +338,17 @@ CREATE TABLE letters (
 8. Jika tidak ditemukan → Return 404 (INVALID)
    ↓
 9. Jika ditemukan → Verifikasi Integritas:
-   - Hitung ulang hash dari data surat
+   - Deteksi tipe dokumen (surat atau sertifikat)
+   - Hitung ulang hash dari data dokumen sesuai tipe
    - Bandingkan dengan hash tersimpan
    - Jika sama → integrity_verified = true
    - Jika berbeda → integrity_verified = false
    ↓
-10. Return response:
+10. Return response sesuai tipe dokumen:
     - status: "VERIFIED"
     - data: {
-        nomor_surat,
-        perihal,
-        penandatangan,
-        tanggal_surat,
+        document_type: "surat" | "sertifikat",
+        // Field sesuai tipe dokumen
         download_url,
         tanda_tangan_url,
         data_hash,
@@ -302,7 +359,7 @@ CREATE TABLE letters (
     ↓
 11. Client render hasil:
     - Status: VERIFIED / INVALID
-    - Data surat
+    - Data dokumen sesuai tipe (surat atau sertifikat)
     - Tanda tangan (jika ada)
     - Hash code
     - Status integritas
@@ -311,12 +368,16 @@ CREATE TABLE letters (
 ### 4.3 Flow Generate Hash
 
 #### 4.3.1 Data Hash (SHA-256)
+
+**Untuk Surat:**
 ```javascript
 // Data yang di-hash
 const data = {
+  document_type: "surat",
   nomor_surat: "123/DS/2025",
   perihal: "Perihal surat",
   penandatangan: "Nama Penandatangan",
+  jabatan_surat: "Jabatan",
   tanggal_surat: "2025-12-07"
 };
 
@@ -324,6 +385,29 @@ const data = {
 const dataString = JSON.stringify(data);
 
 // Generate SHA-256 hash
+const hash = crypto.createHash('sha256')
+  .update(dataString)
+  .digest('hex');
+```
+
+**Untuk Sertifikat:**
+```javascript
+// Data yang di-hash
+const data = {
+  document_type: "sertifikat",
+  nama_peserta: "Nama Peserta",
+  nomor_sertifikat: "CERT-001",
+  nama_penandatangan: "Nama Penandatangan",
+  jabatan_penandatangan: "Jabatan",
+  waktu_penandatangan: "2025-12-07",
+  berlaku_hingga: "Selamanya",
+  nama_instansi: "Nama Instansi",
+  nama_kegiatan: "Nama Kegiatan",
+  tanggal_pelaksanaan: "2025-12-01"
+};
+
+// Convert ke JSON string dan generate hash
+const dataString = JSON.stringify(data);
 const hash = crypto.createHash('sha256')
   .update(dataString)
   .digest('hex');
@@ -349,21 +433,41 @@ const hash = crypto.createHash('sha256')
 ```
 1. Ambil data dari database
    ↓
-2. Reconstruct data object:
+2. Deteksi tipe dokumen (row.document_type)
+   ↓
+3. Reconstruct data object sesuai tipe:
+   
+   **Untuk Surat:**
    {
+     document_type: "surat",
      nomor_surat: row.nomor_surat,
      perihal: row.perihal,
      penandatangan: row.penandatangan,
+     jabatan_surat: row.jabatan_surat || '',
      tanggal_surat: row.tanggal_surat
    }
+   
+   **Untuk Sertifikat:**
+   {
+     document_type: "sertifikat",
+     nama_peserta: row.nama_peserta,
+     nomor_sertifikat: row.nomor_sertifikat,
+     nama_penandatangan: row.nama_penandatangan,
+     jabatan_penandatangan: row.jabatan_penandatangan,
+     waktu_penandatangan: row.waktu_penandatangan,
+     berlaku_hingga: row.berlaku_hingga || 'Selamanya',
+     nama_instansi: row.nama_instansi,
+     nama_kegiatan: row.nama_kegiatan,
+     tanggal_pelaksanaan: row.tanggal_pelaksanaan
+   }
    ↓
-3. Convert ke JSON string
+4. Convert ke JSON string
    ↓
-4. Hitung hash SHA-256
+5. Hitung hash SHA-256
    ↓
-5. Bandingkan dengan hash tersimpan (row.data_hash)
+6. Bandingkan dengan hash tersimpan (row.data_hash)
    ↓
-6. Jika sama → Data tidak diubah (Verified)
+7. Jika sama → Data tidak diubah (Verified)
    Jika berbeda → Data telah diubah (Invalid)
 ```
 
@@ -398,7 +502,7 @@ Text Muted: #94a3b8 (Gray)
 Border: #334155 (Dark Gray)
 ```
 
-### 5.2 Halaman Input Surat (index.html)
+### 5.2 Halaman Input Dokumen (index.html)
 
 #### 5.2.1 Layout
 ```
@@ -406,20 +510,35 @@ Border: #334155 (Dark Gray)
 │  Header                                 │
 │  ┌───┐  🔒 Keamanan Sistem Informasi  │
 │  │DS │  Digital Signature Verification │
-│  └───┘  Input surat, generate QR...    │
+│  └───┘  Input dokumen, generate QR...  │
 │         [Dashboard Admin]               │
 ├─────────────────────────────────────────┤
-│  Card: Input Data Surat                │
+│  Card: Input Data Dokumen              │
 │  ┌─────────────────────────────────┐   │
-│  │ Form Grid (2 columns)           │   │
+│  │ Format Dokumen: [Surat/Sertifikat]│ │
+│  │                                 │   │
+│  │ **Surat Fields** (conditional)  │   │
 │  │ ┌─────────┐  ┌─────────┐      │   │
 │  │ │Nomor    │  │Perihal  │      │   │
 │  │ │Surat    │  │         │      │   │
 │  │ └─────────┘  └─────────┘      │   │
 │  │ ┌─────────┐  ┌─────────┐       │   │
-│  │ │Penanda- │  │Tanggal │       │   │
-│  │ │tangan   │  │Surat   │       │   │
+│  │ │Penanda- │  │Jabatan  │       │   │
+│  │ │tangan   │  │         │       │   │
 │  │ └─────────┘  └────────┘       │   │
+│  │ ┌─────────┐                   │   │
+│  │ │Tanggal  │                   │   │
+│  │ │Surat    │                   │   │
+│  │ └─────────┘                   │   │
+│  │                                 │   │
+│  │ **Sertifikat Fields** (conditional)│
+│  │ ┌─────────┐  ┌─────────┐      │   │
+│  │ │Nama     │  │Nomor    │      │   │
+│  │ │Peserta  │  │Sertifikat│     │   │
+│  │ └─────────┘  └─────────┘      │   │
+│  │ ... (8 field lainnya)         │   │
+│  │                                 │   │
+│  │ **Umum** (opsional)            │   │
 │  │ ┌─────────┐                   │   │
 │  │ │Upload   │                   │   │
 │  │ │PDF      │                   │   │
@@ -436,7 +555,7 @@ Border: #334155 (Dark Gray)
 │  Result Box (setelah submit)           │
 │  ┌─────────────────────────────────┐   │
 │  │ ✓ QR Code berhasil dibuat       │   │
-│  │ [QR Code Image]                 │   │
+│  │ [QR Code Image with Logo]       │   │
 │  │ Hash Code: a1b2c3d4...          │   │
 │  │ [Download QR] [Verifikasi]     │   │
 │  └─────────────────────────────────┘   │
@@ -444,6 +563,8 @@ Border: #334155 (Dark Gray)
 ```
 
 #### 5.2.2 Fitur UI
+- **Document Type Selector**: Dropdown untuk memilih Surat atau Sertifikat
+- **Dynamic Form Fields**: Form fields berubah sesuai tipe dokumen yang dipilih
 - **Form Grid**: Responsive 2-column layout (1 column di mobile)
 - **File Upload**: 
   - Dashed border untuk visual feedback
@@ -456,7 +577,7 @@ Border: #334155 (Dark Gray)
   - Disabled: Grayed out
 - **Result Box**:
   - Slide-in animation
-  - QR Code preview
+  - QR Code preview dengan logo overlay
   - Hash code display
   - Action buttons
 
@@ -468,7 +589,7 @@ Border: #334155 (Dark Gray)
 │  Header                                 │
 │  ┌───┐  🔒 Keamanan Sistem Informasi  │
 │  │DS │  Dashboard Admin                │
-│  └───┘  Pantau seluruh surat...         │
+│  └───┘  Pantau seluruh dokumen...        │
 │         [Input Surat] [Export Excel]    │
 ├─────────────────────────────────────────┤
 │  Card: Data Surat                       │
@@ -487,10 +608,30 @@ Border: #334155 (Dark Gray)
 │  │ [Download QR] [Verifikasi]      │   │
 │  │ [Download Surat] [Hapus]        │   │
 │  └─────────────────────────────────┘   │
+│                                         │
+│  Card: Data Sertifikat                 │
+│  ┌─────────────────────────────────┐   │
+│  │ Table Responsive                 │   │
+│  │ ┌──┬──────┬──────┬──────┬───┐   │   │
+│  │ │No│Nama  │Nomor │Penand│QR │   │   │
+│  │ │  │Peserta│Sertif│atangan│&  │   │   │
+│  │ │  │      │kat   │      │Hash│   │   │
+│  │ ├──┼──────┼──────┼──────┼───┤   │   │
+│  │ │1 │John │CERT- │Wildan│[QR]│   │   │
+│  │ │  │Doe  │001   │      │hash│   │   │
+│  │ └──┴──────┴──────┴──────┴───┘   │   │
+│  │                                  │   │
+│  │ Actions:                         │   │
+│  │ [Download QR] [Verifikasi]      │   │
+│  │ [Download Sertifikat] [Hapus]   │   │
+│  └─────────────────────────────────┘   │
 └─────────────────────────────────────────┘
 ```
 
 #### 5.3.2 Fitur UI
+- **Dual Tables**:
+  - Tabel terpisah untuk Surat dan Sertifikat
+  - Counter menampilkan total dokumen per tipe
 - **Table**:
   - Responsive dengan horizontal scroll di mobile
   - Hover effect pada row
@@ -532,6 +673,9 @@ Border: #334155 (Dark Gray)
 - **Status Badge**: 
   - Green (Verified) / Red (Invalid)
   - Icon indicator
+- **Dynamic Content**: 
+  - Menampilkan data sesuai tipe dokumen (Surat atau Sertifikat)
+  - Field yang ditampilkan berbeda untuk setiap tipe
 - **Info Grid**: 
   - 4-column grid (responsive)
   - Card-based layout
@@ -628,18 +772,35 @@ Server akan berjalan di `http://localhost:3000`
 
 ### 6.2 Mengoperasikan Sistem
 
-#### 6.2.1 Input Surat Baru
+#### 6.2.1 Input Dokumen Baru
 
 1. **Buka Halaman Input**
    - Akses: `http://localhost:3000`
    - Atau klik "Input Surat" dari dashboard admin
 
-2. **Isi Form Data Surat**
+2. **Pilih Format Dokumen**
+   - Pilih "Surat Resmi" atau "Sertifikat" dari dropdown
+   - Form akan menampilkan field sesuai tipe dokumen yang dipilih
+
+3. **Isi Form Data (Surat)**
    - **Nomor Surat**: Masukkan nomor surat (contoh: `123/DS/2025`)
      - ⚠️ Harus unik, tidak boleh duplikat
    - **Perihal**: Masukkan perihal surat
    - **Nama Penandatangan**: Masukkan nama lengkap penandatangan
+   - **Jabatan Penandatangan**: Masukkan jabatan penandatangan
    - **Tanggal Surat**: Pilih tanggal menggunakan date picker
+
+4. **Isi Form Data (Sertifikat)**
+   - **Nama Peserta**: Masukkan nama lengkap peserta
+   - **Nomor Sertifikat**: Masukkan nomor sertifikat (contoh: `CERT-001`)
+     - ⚠️ Harus unik, tidak boleh duplikat
+   - **Nama Penandatangan**: Masukkan nama lengkap penandatangan
+   - **Jabatan Penandatangan**: Masukkan jabatan penandatangan
+   - **Tanggal Penandatanganan**: Pilih tanggal penandatanganan
+   - **Berlaku Hingga**: Pilih tanggal atau centang "Selamanya"
+   - **Nama Instansi/Organisasi**: Masukkan nama instansi
+   - **Nama Kegiatan/Pelatihan**: Masukkan nama kegiatan
+   - **Tanggal Pelaksanaan**: Pilih tanggal pelaksanaan
 
 3. **Upload File (Opsional)**
    - **File Surat PDF**: 
@@ -665,11 +826,11 @@ Server akan berjalan di `http://localhost:3000`
    - Klik tombol "📥 Download QR Code"
    - File akan terdownload dengan nama: `qr-code-{id}-{hash8chars}.png`
 
-#### 6.2.2 Verifikasi Surat
+#### 6.2.2 Verifikasi Dokumen
 
 **Metode 1: Scan QR Code**
 1. Buka aplikasi scanner QR Code di smartphone
-2. Scan QR Code yang sudah di-generate
+2. Scan QR Code yang sudah di-generate (dengan logo overlay)
 3. Browser akan otomatis membuka halaman verifikasi
 
 **Metode 2: Manual URL**
@@ -679,7 +840,7 @@ Server akan berjalan di `http://localhost:3000`
 
 **Hasil Verifikasi:**
 - ✅ **VERIFIED**: Data valid dan integritas terverifikasi
-  - Menampilkan data surat lengkap
+  - Menampilkan data dokumen lengkap sesuai tipe (Surat atau Sertifikat)
   - Menampilkan tanda tangan (jika ada)
   - Menampilkan hash code
   - Status integritas: ✅ Terverifikasi
@@ -694,13 +855,24 @@ Server akan berjalan di `http://localhost:3000`
    - Atau klik "Dashboard Admin" dari halaman input
 
 2. **Fitur Dashboard**
-   - **Tabel Data**: Menampilkan semua surat yang sudah diinput
-   - **Kolom Tabel**:
+   - **Dual Tabel Data**: 
+     - Tabel "Data Surat": Menampilkan semua surat yang sudah diinput
+     - Tabel "Data Sertifikat": Menampilkan semua sertifikat yang sudah diinput
+   - **Counter**: Menampilkan total dokumen (jumlah surat + sertifikat)
+   - **Kolom Tabel Surat**:
      - No: Nomor urut
      - Nomor Surat
      - Perihal
      - Penandatangan
      - Tanggal
+     - QR & Hash: Preview QR Code dengan hash code di bawahnya
+     - Aksi: Tombol-tombol aksi
+   - **Kolom Tabel Sertifikat**:
+     - No: Nomor urut
+     - Nama Peserta
+     - Nomor Sertifikat
+     - Penandatangan
+     - Tanggal Penandatanganan
      - QR & Hash: Preview QR Code dengan hash code di bawahnya
      - Aksi: Tombol-tombol aksi
 
@@ -714,11 +886,17 @@ Server akan berjalan di `http://localhost:3000`
 4. **Export ke Excel**
    - Klik tombol "Export ke Excel"
    - File Excel akan terdownload
-   - Berisi:
-     - Data surat lengkap
-     - Data Hash (SHA-256)
-     - Signature Hash (SHA-256)
-     - QR Code sebagai gambar
+   - Berisi 2 sheet terpisah:
+     - **Sheet "Data Surat"**: 
+       - Data surat lengkap
+       - Data Hash (SHA-256)
+       - Signature Hash (SHA-256)
+       - QR Code sebagai gambar
+     - **Sheet "Data Sertifikat"**:
+       - Data sertifikat lengkap
+       - Data Hash (SHA-256)
+       - Signature Hash (SHA-256)
+       - QR Code sebagai gambar
 
 #### 6.2.4 Akses dari Perangkat Lain (Mobile/Network)
 
@@ -831,6 +1009,14 @@ Server akan berjalan di `http://localhost:3000`
   - Type checking
   - Custom validators
 
+#### 7.1.10 Sharp
+- **Versi**: ^0.34.5
+- **Fungsi**: Image processing untuk QR Code dengan logo overlay
+- **Fitur**: 
+  - Resize dan composite image
+  - PNG processing
+  - Logo overlay pada QR Code
+
 ### 7.2 Frontend
 
 #### 7.2.1 HTML5
@@ -880,43 +1066,49 @@ Server akan berjalan di `http://localhost:3000`
 
 ### 8.1 Fitur Utama
 
-#### 8.1.1 Input Data Surat
-- ✅ Form input dengan validasi
-- ✅ Upload file PDF surat (opsional, maks 5MB)
+#### 8.1.1 Input Data Dokumen
+- ✅ Pilihan format dokumen (Surat atau Sertifikat)
+- ✅ Form input dinamis sesuai tipe dokumen dengan validasi
+- ✅ Upload file PDF dokumen (opsional, maks 5MB)
 - ✅ Upload gambar tanda tangan (opsional, maks 2MB)
 - ✅ Preview gambar tanda tangan sebelum submit
-- ✅ Validasi nomor surat unik
+- ✅ Validasi nomor surat/nomor sertifikat unik
 - ✅ Real-time form validation
+- ✅ Field jabatan untuk penandatangan
 
 #### 8.1.2 Generate QR Code
 - ✅ Otomatis generate QR Code setelah data disimpan
 - ✅ QR Code berisi URL verifikasi dengan ID dan nonce
+- ✅ QR Code dengan logo overlay di tengah (jika logo tersedia)
 - ✅ QR Code dapat di-download
 - ✅ Nama file download include hash code
 
 #### 8.1.3 Digital Signature (Hash)
-- ✅ Generate hash SHA-256 untuk data surat
+- ✅ Generate hash SHA-256 untuk data dokumen (surat atau sertifikat)
+- ✅ Hash berbeda untuk setiap tipe dokumen sesuai field yang relevan
 - ✅ Generate hash SHA-256 untuk file tanda tangan
 - ✅ Hash disimpan di database
 - ✅ Hash ditampilkan di semua tempat yang relevan
 
-#### 8.1.4 Verifikasi Surat
+#### 8.1.4 Verifikasi Dokumen
 - ✅ Verifikasi via QR Code scan
 - ✅ Verifikasi via URL manual
 - ✅ Verifikasi integritas data dengan hash
 - ✅ Tampilan status verifikasi (Verified/Invalid)
 - ✅ Tampilan informasi hash untuk audit
 - ✅ Tampilan tanda tangan (jika ada)
-- ✅ Download file surat dari halaman verifikasi
+- ✅ Tampilan data sesuai tipe dokumen (Surat atau Sertifikat)
+- ✅ Download file dokumen dari halaman verifikasi
 
 #### 8.1.5 Dashboard Admin
-- ✅ Tabel data semua surat
+- ✅ Dual tabel data: Surat dan Sertifikat terpisah
+- ✅ Counter total dokumen per tipe
 - ✅ Preview QR Code dengan hash
 - ✅ Download QR Code dengan hash di nama file
-- ✅ Download file surat PDF
+- ✅ Download file dokumen PDF
 - ✅ Lihat gambar tanda tangan
-- ✅ Hapus data surat
-- ✅ Export data ke Excel dengan hash
+- ✅ Hapus data dokumen
+- ✅ Export data ke Excel dengan 2 sheet terpisah (Surat dan Sertifikat) dan hash
 
 ### 8.2 Fitur Tambahan
 
@@ -939,10 +1131,11 @@ Server akan berjalan di `http://localhost:3000`
 
 #### 8.2.3 Data Management
 - ✅ Auto-generate hash untuk data lama
-- ✅ Export ke Excel dengan QR Code
+- ✅ Export ke Excel dengan QR Code (2 sheet terpisah)
 - ✅ Download QR Code individual
-- ✅ Download file surat
+- ✅ Download file dokumen
 - ✅ Delete data dengan konfirmasi
+- ✅ Pemisahan data berdasarkan tipe dokumen
 
 ---
 
@@ -981,9 +1174,11 @@ Server akan berjalan di `http://localhost:3000`
 ### 9.3 Data Integrity
 
 #### 9.3.1 Hash SHA-256
-- **Data Hash**: Hash dari data surat (nomor, perihal, penandatangan, tanggal)
+- **Data Hash**: Hash dari data dokumen sesuai tipe:
+  - **Surat**: nomor_surat, perihal, penandatangan, jabatan_surat, tanggal_surat
+  - **Sertifikat**: nama_peserta, nomor_sertifikat, nama_penandatangan, jabatan_penandatangan, waktu_penandatangan, berlaku_hingga, nama_instansi, nama_kegiatan, tanggal_pelaksanaan
 - **Signature Hash**: Hash dari file gambar tanda tangan
-- **Verifikasi**: Bandingkan hash tersimpan dengan hash yang dihitung ulang
+- **Verifikasi**: Bandingkan hash tersimpan dengan hash yang dihitung ulang sesuai tipe dokumen
 
 #### 9.3.2 Nonce (UUID)
 - Setiap surat memiliki nonce unik (UUID v4)
@@ -1020,22 +1215,30 @@ Sistem Verifikasi Tanda Tangan Digital telah berhasil mengimplementasikan:
 
 1. ✅ **Tanda Tangan Digital**: 
    - Upload dan penyimpanan gambar tanda tangan
-   - Integrasi dengan data surat
+   - Integrasi dengan data dokumen (surat dan sertifikat)
 
-2. ✅ **Metode Hash (SHA-256)**:
-   - Hash untuk data surat
+2. ✅ **Multi-Document Type Support**:
+   - Dukungan untuk Surat Resmi
+   - Dukungan untuk Sertifikat dengan field lengkap
+   - Pemisahan data dan tampilan per tipe dokumen
+
+3. ✅ **Metode Hash (SHA-256)**:
+   - Hash untuk data dokumen sesuai tipe (surat atau sertifikat)
    - Hash untuk file tanda tangan
    - Verifikasi integritas data
 
-3. ✅ **Sistem Verifikasi**:
-   - Verifikasi via QR Code
+4. ✅ **Sistem Verifikasi**:
+   - Verifikasi via QR Code dengan logo overlay
    - Verifikasi integritas dengan hash
    - Tampilan status verifikasi
+   - Tampilan data sesuai tipe dokumen
 
-4. ✅ **User Interface**:
+5. ✅ **User Interface**:
    - Dark theme yang aesthetic
    - Mobile-friendly design
    - User-friendly dengan feedback yang jelas
+   - Dynamic form fields berdasarkan tipe dokumen
+   - Dual table dashboard untuk Surat dan Sertifikat
 
 ### 10.2 Kelebihan Sistem
 
@@ -1091,6 +1294,7 @@ Sistem Verifikasi Tanda Tangan Digital telah berhasil mengimplementasikan:
     "helmet": "^7.1.0",
     "multer": "^1.4.5-lts.1",
     "qrcode": "^1.5.4",
+    "sharp": "^0.34.5",
     "sqlite3": "^5.1.7",
     "uuid": "^9.0.1"
   }
@@ -1101,15 +1305,15 @@ Sistem Verifikasi Tanda Tangan Digital telah berhasil mengimplementasikan:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/` | Halaman input surat |
-| GET | `/admin` | Dashboard admin |
+| GET | `/` | Halaman input dokumen (Surat/Sertifikat) |
+| GET | `/admin` | Dashboard admin (dual table) |
 | GET | `/verify` | Halaman verifikasi |
-| POST | `/api/letters` | Simpan surat baru |
-| GET | `/api/letters` | Daftar semua surat |
+| POST | `/api/letters` | Simpan dokumen baru (surat atau sertifikat) |
+| GET | `/api/letters` | Daftar semua dokumen (surat dan sertifikat) |
 | GET | `/api/verify` | Data verifikasi |
-| GET | `/api/export/excel` | Export ke Excel |
-| GET | `/download/:id` | Download file surat |
-| DELETE | `/api/letters/:id` | Hapus surat |
+| GET | `/api/export/excel` | Export ke Excel (2 sheet terpisah) |
+| GET | `/download/:id` | Download file dokumen |
+| DELETE | `/api/letters/:id` | Hapus dokumen |
 
 ### C. Database Schema
 
